@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChromaCode — IT Linden</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0b;--s:#141416;--s2:#1c1c20;--bd:#2a2a30;--t:#e8e8ec;--td:#8888a0;--ac:#ff4d4d;--ac2:#ff7043;--glow:rgba(255,77,77,.15)}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+.app{max-width:720px;margin:0 auto;padding:32px 20px}
+header{text-align:center;margin-bottom:36px}
+header h1{font-family:'Space Mono',monospace;font-size:1.8rem;font-weight:700;letter-spacing:-1px;background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+header p{color:var(--td);font-size:.9rem;font-weight:300}
+
+/* URL input area */
+.url-row{display:flex;gap:8px;margin-bottom:16px}
+.url-row input{flex:1;background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;font-family:'Space Mono',monospace;font-size:.85rem;color:var(--t);outline:none}
+.url-row input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--glow)}
+.btn{background:linear-gradient(135deg,var(--ac),var(--ac2));border:none;border-radius:12px;padding:14px 28px;color:#fff;font-family:'Outfit',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .15s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px var(--glow)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* Source tabs */
+.src-row{display:flex;gap:8px;margin-bottom:20px;align-items:center}
+.src-row .tabs{display:flex;gap:2px;background:var(--s2);border-radius:10px;padding:3px;flex:1}
+.src-row .tab{flex:1;text-align:center;padding:7px;font-size:.78rem;font-weight:500;border-radius:8px;cursor:pointer;color:var(--td);transition:all .2s}
+.src-row .tab.on{background:var(--ac);color:#fff}
+.tb{display:none}.tb.on{display:block}
+.dz{border:2px dashed var(--bd);border-radius:12px;padding:20px;text-align:center;cursor:pointer;color:var(--td);font-size:.82rem;margin-bottom:16px;transition:all .2s}
+.dz:hover,.dz.ov{border-color:var(--ac);background:var(--glow)}
+.dz input{display:none}
+.dz .th{max-width:60px;max-height:60px;border-radius:6px;margin-bottom:6px}
+.hint{font-size:.7rem;color:var(--td);margin-top:4px}
+
+/* Status */
+.st{font-size:.8rem;color:var(--td);font-family:'Space Mono',monospace;text-align:center;min-height:1.4em;margin:12px 0}
+.st.err{color:var(--ac)}
+
+/* Main preview */
+.main-preview{background:#fff;border-radius:14px;padding:16px;box-shadow:0 8px 40px rgba(0,0,0,.4);margin:0 auto 20px;max-width:500px}
+.main-preview canvas{display:block;width:100%;height:auto}
+
+/* Version carousel */
+.carousel{display:flex;gap:10px;overflow-x:auto;padding:8px 0 16px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+.carousel::-webkit-scrollbar{height:4px}
+.carousel::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+.vcard{flex:0 0 auto;width:110px;cursor:pointer;scroll-snap-align:start;transition:transform .2s}
+.vcard.sel{transform:scale(1.05)}
+.vcard .vthumb{background:#fff;border-radius:10px;padding:6px;border:2px solid transparent;transition:border-color .2s}
+.vcard.sel .vthumb{border-color:var(--ac)}
+.vcard .vthumb canvas{display:block;width:100%;height:auto;border-radius:6px}
+.vcard .vlabel{text-align:center;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--td);margin-top:6px}
+.vcard.sel .vlabel{color:var(--ac);font-weight:700}
+
+/* Source info */
+.si{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--s);border-radius:10px;font-size:.82rem;color:var(--td);margin-bottom:16px}
+.si img{width:36px;height:36px;border-radius:6px;object-fit:contain}
+.pal{display:flex;gap:3px;margin-left:auto}
+.sw{width:14px;height:14px;border-radius:3px;border:1px solid var(--bd)}
+
+/* Downloads */
+.dl-row{display:flex;gap:8px;justify-content:center;margin-bottom:24px}
+.bdl{background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:10px 24px;color:var(--t);font-family:'Outfit',sans-serif;font-weight:500;font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px}
+.bdl:hover{border-color:var(--ac);color:var(--ac)}
+
+/* Settings toggle */
+.settings-toggle{text-align:center;margin-bottom:16px}
+.settings-toggle button{background:none;border:1px solid var(--bd);border-radius:8px;padding:8px 16px;color:var(--td);font-size:.78rem;cursor:pointer;font-family:'Outfit',sans-serif}
+.settings-toggle button:hover{border-color:var(--ac);color:var(--t)}
+.settings-panel{display:none;background:var(--s);border:1px solid var(--bd);border-radius:14px;padding:20px;margin-bottom:20px}
+.settings-panel.open{display:block}
+.settings-panel label{display:block;font-size:.82rem;color:var(--td);margin-bottom:4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.ig{margin-bottom:14px}
+select,input[type=color]{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:.8rem;color:var(--t);outline:none;width:100%;cursor:pointer}
+input[type=range]{-webkit-appearance:none;height:5px;padding:0;border:none;border-radius:3px;background:var(--bd);margin-top:6px;width:100%}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--ac);cursor:pointer;border:2px solid var(--s)}
+input[type=color]{height:34px;padding:3px}
+.rv{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--ac)}
+.sep{border:none;border-top:1px solid var(--bd);margin:14px 0}
+.chk{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--td);cursor:pointer}
+.chk input{accent-color:var(--ac);width:15px;height:15px}
+.spin{width:18px;height:18px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:sp .6s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>CHROMACODE</h1><p>Brand-aware QR codes by IT Linden</p></header>
+
+<!-- URL Input -->
+<div class="url-row">
+  <input type="text" id="url" placeholder="https://itlinden.lv" spellcheck="false">
+  <button class="btn" id="bg" onclick="generate()">Generate</button>
+</div>
+
+<!-- Image Source -->
+<div class="src-row">
+  <div class="tabs" id="tabs">
+    <div class="tab on" data-t="fav">Favicon</div>
+    <div class="tab" data-t="upl">Upload</div>
+    <div class="tab" data-t="iu">Image URL</div>
+  </div>
+</div>
+<div id="t-fav" class="tb on"></div>
+<div id="t-upl" class="tb">
+  <div class="dz" id="dz"><div id="dp">Drop image or tap to browse</div><input type="file" id="fi" accept="image/*"></div>
+</div>
+<div id="t-iu" class="tb"><input type="text" id="iu" placeholder="https://example.com/logo.png" style="background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;font-family:'Space Mono',monospace;font-size:.8rem;color:var(--t);outline:none;width:100%;margin-bottom:16px"></div>
+
+<div id="stm" class="st">Enter a URL, pick image source, then Generate</div>
+
+<!-- Source Info -->
+<div id="si" class="si" style="display:none"><img id="sth"><span id="sn">—</span><div class="pal" id="pal"></div></div>
+
+<!-- Main Preview -->
+<div id="mainWrap" style="display:none">
+  <div class="main-preview"><canvas id="mainCanvas" width="1024" height="1024"></canvas></div>
+
+  <!-- Version Carousel -->
+  <div class="carousel" id="carousel"></div>
+
+  <!-- Downloads -->
+  <div class="dl-row">
+    <button class="bdl" onclick="dlPNG()">↓ PNG</button>
+    <button class="bdl" onclick="dlSVG()">↓ SVG</button>
+  </div>
+</div>
+
+<!-- Advanced Settings (collapsed) -->
+<div class="settings-toggle"><button onclick="document.getElementById('sp').classList.toggle('open')">⚙ Advanced Settings</button></div>
+<div id="sp" class="settings-panel">
+  <div class="ig"><div class="g3">
+    <div><label>Shape</label><select id="shp"><option value="circle">Circle</option><option value="rrect">Rounded</option><option value="sq">Square</option></select></div>
+    <div><label>ECC</label><select id="ecc"><option value="H" selected>High</option><option value="Q">Quartile</option><option value="M">Medium</option></select></div>
+    <div><label>Output px</label><select id="osz"><option value="800">800</option><option value="1024" selected>1024</option><option value="1600">1600</option><option value="2048">2048</option></select></div>
+  </div></div>
+  <div class="sep"></div>
+  <div class="ig">
+    <label>Dark Dot Range — <span class="rv" id="vDmn">30%</span> to <span class="rv" id="vDmx">105%</span></label>
+    <div class="g2">
+      <div><input type="range" id="sDmn" min="15" max="60" value="30"></div>
+      <div><input type="range" id="sDmx" min="70" max="110" value="105"></div>
+    </div>
+  </div>
+  <div class="ig">
+    <label>Ghost Strength — <span class="rv" id="vG">80%</span></label>
+    <input type="range" id="sG" min="0" max="80" value="80">
+  </div>
+  <div class="ig">
+    <label>Ghost Threshold — <span class="rv" id="vGt">8%</span></label>
+    <input type="range" id="sGt" min="0" max="60" value="8">
+  </div>
+  <div class="sep"></div>
+  <div class="ig"><div class="g2">
+    <div><label>Background</label><input type="color" id="bgc" value="#ffffff"></div>
+    <div><label>Fallback dark</label><input type="color" id="fdc" value="#000000"></div>
+  </div></div>
+  <div class="ig"><label class="chk"><input type="checkbox" id="col" checked> Use image colors</label></div>
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+const VERSIONS = [7, 10, 13, 15, 18]; // versions to generate
+let S = { versions: [], selectedIdx: 2, img: null, colors: [], label: '', thumb: '' };
+let uploadedFile = null;
+
+// ════════════════════════════════════════
+// TABS / FILE UPLOAD
+// ════════════════════════════════════════
+document.getElementById('tabs').onclick = e => {
+  const t = e.target.closest('.tab'); if (!t) return;
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  document.querySelectorAll('.tb').forEach(x => x.classList.remove('on'));
+  document.getElementById('t-' + t.dataset.t).classList.add('on');
+};
+const dz = document.getElementById('dz'), fi = document.getElementById('fi');
+dz.onclick = () => fi.click();
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('ov'); };
+dz.ondragleave = () => dz.classList.remove('ov');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('ov'); pickFile(e.dataTransfer.files[0]); };
+fi.onchange = e => pickFile(e.target.files[0]);
+function pickFile(f) {
+  if (!f || !f.type.startsWith('image/')) return;
+  uploadedFile = f;
+  const r = new FileReader();
+  r.onload = e => document.getElementById('dp').innerHTML = `<img class="th" src="${e.target.result}"><br><span style="font-size:.7rem">${f.name}</span>`;
+  r.readAsDataURL(f);
+}
+
+function status(m, err) { const e = document.getElementById('stm'); e.textContent = m; e.className = 'st' + (err ? ' err' : ''); }
+function activeTab() { return document.querySelector('.tab.on').dataset.t; }
+
+// ════════════════════════════════════════
+// IMAGE LOADING
+// ════════════════════════════════════════
+async function loadImg(url) {
+  const tab = activeTab();
+  if (tab === 'upl') { if (!uploadedFile) throw 'No image uploaded.'; return await fileToImg(uploadedFile); }
+  if (tab === 'iu') { const u = document.getElementById('iu').value.trim(); if (!u) throw 'Enter an image URL.'; return await fetchImg('proxy.php?url='+encodeURIComponent(u)) || await fetchImg(u) || await fetchImg('https://corsproxy.io/?'+encodeURIComponent(u)) || (()=>{throw 'Cannot load image.'})(); }
+  let d; try{d=new URL(url).hostname}catch{throw 'Invalid URL'}
+  // Try server-side proxy first (works when proxy.php is deployed alongside)
+  const proxyImg = await fetchImg('proxy.php?domain='+encodeURIComponent(d));
+  if (proxyImg) return proxyImg;
+  // Fallback to client-side fetching
+  for (const s of [`https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${d}&size=256`,`https://www.google.com/s2/favicons?domain=${d}&sz=256`,`https://icons.duckduckgo.com/ip3/${d}.ico`,`https://${d}/apple-touch-icon.png`]) {
+    const img = await fetchImg(s) || await fetchImg('https://corsproxy.io/?'+encodeURIComponent(s));
+    if (img) return img;
+  }
+  throw `Cannot load favicon for ${d}. Use Upload tab.`;
+}
+function fileToImg(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=r.result};r.onerror=rej;r.readAsDataURL(f)})}
+function fetchImg(src){return new Promise(res=>{fetch(src,{signal:AbortSignal.timeout(5000)}).then(r=>r.ok?r.blob():null).then(b=>{if(!b||b.size<50){res(null);return}const u=URL.createObjectURL(b);const i=new Image();i.onload=()=>i.naturalWidth<2?res(null):res(i);i.onerror=()=>{URL.revokeObjectURL(u);res(null)};i.src=u}).catch(()=>res(null))})}
+
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function extractColors(img){const c=document.createElement('canvas');c.width=c.height=64;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,64,64);const d=ctx.getImageData(0,0,64,64).data;const bk={};for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const k=`${Math.round(d[i]/24)*24},${Math.round(d[i+1]/24)*24},${Math.round(d[i+2]/24)*24}`;bk[k]=(bk[k]||0)+1}return Object.entries(bk).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k])=>{const[r,g,b]=k.split(',').map(Number);return{r,g,b}})}
+function imgToGrid(img,sz){const c=document.createElement('canvas');c.width=c.height=sz;const ctx=c.getContext('2d');const iw=img.naturalWidth,ih=img.naturalHeight,sc=Math.max(sz/iw,sz/ih),sw=iw*sc,sh=ih*sc;ctx.drawImage(img,(sz-sw)/2,(sz-sh)/2,sw,sh);return ctx.getImageData(0,0,sz,sz)}
+function px(g,c,r){const i=(r*g.width+c)*4;return{r:g.data[i],g:g.data[i+1],b:g.data[i+2],a:g.data[i+3]}}
+function lum(r,g,b){return(0.299*r+0.587*g+0.114*b)/255}
+function isFinder(r,c,sz){const z=[[0,0],[0,sz-7],[sz-7,0]];for(const[pr,pc]of z)if(r>=pr&&r<pr+7&&c>=pc&&c<pc+7)return true;return false}
+function isCritical(r,c,sz){
+  // Only finders and separators are truly critical for scanning.
+  // Timing patterns (row 6, col 6) can be colored — High ECC handles it.
+  if(isFinder(r,c,sz))return true;
+  if((r===7&&(c<8||c>=sz-8))||(r===sz-8&&c<8))return true;
+  if((c===7&&(r<8||r>=sz-8))||(c===sz-8&&r<8))return true;
+  return false;
+}
+function hexRgb(h){const m=h.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);return m?{r:+('0x'+m[1]),g:+('0x'+m[2]),b:+('0x'+m[3])}:{r:0,g:0,b:0}}
+
+// Boost color saturation to match MosaicQR vibrancy
+function boostColor(r, g, b, amount) {
+  const gray = 0.299*r + 0.587*g + 0.114*b;
+  return {
+    r: Math.min(255, Math.max(0, Math.round(gray + (r - gray) * (1 + amount)))),
+    g: Math.min(255, Math.max(0, Math.round(gray + (g - gray) * (1 + amount)))),
+    b: Math.min(255, Math.max(0, Math.round(gray + (b - gray) * (1 + amount))))
+  };
+}
+
+function autoTune(grid, sz) {
+  let sumL=0,darkPx=0,lightPx=0,minL=1,maxL=0;
+  for(let r=0;r<sz;r++)for(let c=0;c<sz;c++){const p=px(grid,c,r);const L=lum(p.r,p.g,p.b);sumL+=L;if(L<.25)darkPx++;if(L>.75)lightPx++;if(L<minL)minL=L;if(L>maxL)maxL=L}
+  const total=sz*sz,contrast=maxL-minL,lightR=lightPx/total,darkR=darkPx/total;
+  let dm,dx,gh,gt;
+  if(contrast>.6){dm=30;dx=105;gh=80;gt=8}else if(contrast>.35){dm=33;dx=100;gh=70;gt=15}else{dm=38;dx=95;gh=60;gt=22}
+  if(lightR>.5){gh=Math.min(80,gh+8);dm=Math.max(20,dm-3)}
+  if(darkR>.5){gh=Math.max(45,gh-8);gt=Math.min(30,gt+6)}
+  setS('sDmn',dm,'vDmn');setS('sDmx',dx,'vDmx');setS('sG',gh,'vG');setS('sGt',gt,'vGt');
+}
+function setS(id,v,lid){document.getElementById(id).value=v;document.getElementById(lid).textContent=v+'%'}
+
+// ════════════════════════════════════════
+// GENERATE — render all versions
+// ════════════════════════════════════════
+async function generate() {
+  let url = document.getElementById('url').value.trim();
+  if (!url) { status('Enter the URL the QR code should link to', true); return; }
+  if (!/^https?:\/\//i.test(url) && url.includes('.')) { url = 'https://' + url; document.getElementById('url').value = url; }
+
+  const btn = document.getElementById('bg');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  status('Loading image...');
+
+  try {
+    const sourceImg = await loadImg(url);
+    const colors = extractColors(sourceImg);
+    S.colors = colors; S.label = (() => { try { return new URL(url).hostname } catch { return 'qr' } })(); S.thumb = sourceImg.src || '';
+
+    // Show source info
+    document.getElementById('sth').src = S.thumb;
+    document.getElementById('sn').textContent = S.label;
+    const pal = document.getElementById('pal'); pal.innerHTML = '';
+    colors.forEach(c => { const d = document.createElement('div'); d.className = 'sw'; d.style.background = `rgb(${c.r},${c.g},${c.b})`; pal.appendChild(d); });
+    document.getElementById('si').style.display = 'flex';
+
+    // Generate all versions
+    const ecc = document.getElementById('ecc').value;
+    S.versions = [];
+    const carousel = document.getElementById('carousel');
+    carousel.innerHTML = '';
+
+    let tuned = false;
+
+    for (let i = 0; i < VERSIONS.length; i++) {
+      const ver = VERSIONS[i];
+      let qr;
+      try { qr = qrcode(ver, ecc); qr.addData(url); qr.make(); }
+      catch { try { qr = qrcode(0, ecc); qr.addData(url); qr.make(); } catch { continue; } }
+      const sz = qr.getModuleCount();
+      const grid = imgToGrid(sourceImg, sz);
+
+      // Auto-tune on first version
+      if (!tuned) { 
+        autoTune(grid, sz); 
+        tuned = true;
+        // Warn if image is mostly white/light
+        let lightCount = 0;
+        for (let r = 0; r < sz; r++) for (let c = 0; c < sz; c++) {
+          const pp = px(grid, c, r);
+          if (lum(pp.r, pp.g, pp.b) > 0.85) lightCount++;
+        }
+        if (lightCount / (sz * sz) > 0.6) {
+          status('⚠ Image is mostly white — crop tightly around the logo for best results', false);
+        }
+      }
+
+      // Render thumbnail
+      const thumbCanvas = document.createElement('canvas');
+      thumbCanvas.width = thumbCanvas.height = 256;
+      renderToCanvas(thumbCanvas, qr, sz, grid, 256);
+
+      // Store version data
+      S.versions.push({ qr, sz, grid, ver, modules: sz });
+
+      // Create carousel card
+      const card = document.createElement('div');
+      card.className = 'vcard' + (i === S.selectedIdx ? ' sel' : '');
+      card.innerHTML = `<div class="vthumb"></div><div class="vlabel">v${ver} · ${sz}px</div>`;
+      card.querySelector('.vthumb').appendChild(thumbCanvas);
+      card.onclick = () => selectVersion(i);
+      carousel.appendChild(card);
+    }
+
+    // Render selected version full-size
+    S.selectedIdx = Math.min(S.selectedIdx, S.versions.length - 1);
+    renderSelected();
+
+    document.getElementById('mainWrap').style.display = 'block';
+    status('');
+  } catch (e) {
+    status('Error: ' + e, true); console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Generate';
+  }
+}
+
+function selectVersion(idx) {
+  S.selectedIdx = idx;
+  document.querySelectorAll('.vcard').forEach((c, i) => c.classList.toggle('sel', i === idx));
+  renderSelected();
+}
+
+function renderSelected() {
+  const v = S.versions[S.selectedIdx];
+  if (!v) return;
+  const outPx = +document.getElementById('osz').value;
+  const canvas = document.getElementById('mainCanvas');
+  canvas.width = canvas.height = outPx;
+  renderToCanvas(canvas, v.qr, v.sz, v.grid, outPx);
+}
+
+// ════════════════════════════════════════
+// CORE RENDER
+// ════════════════════════════════════════
+function renderToCanvas(canvas, qr, sz, grid, outPx) {
+  const darkMin = +document.getElementById('sDmn').value / 100;
+  const darkMax = +document.getElementById('sDmx').value / 100;
+  const ghostStr = +document.getElementById('sG').value / 100;
+  const ghostThresh = +document.getElementById('sGt').value / 100;
+  const shape = document.getElementById('shp').value;
+  const bgColor = document.getElementById('bgc').value;
+  const fallbackDark = hexRgb(document.getElementById('fdc').value);
+  const useColor = document.getElementById('col').checked;
+
+  const ctx = canvas.getContext('2d');
+  const quiet = 2, total = sz + quiet * 2, cell = outPx / total, maxR = cell / 2;
+
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, outPx, outPx);
+
+  for (let row = 0; row < sz; row++) {
+    for (let col = 0; col < sz; col++) {
+      const isDark = qr.isDark(row, col);
+      const cx = (col + quiet + 0.5) * cell, cy = (row + quiet + 0.5) * cell;
+      const critical = isCritical(row, col, sz);
+      const p = px(grid, col, row);
+      const L = lum(p.r, p.g, p.b), darkness = 1 - L;
+
+      if (isDark) {
+        let r, color;
+        if (critical) {
+          r = maxR * 0.92;
+          // Use dominant image color for finders instead of black
+          const dom = S.colors[0] || fallbackDark;
+          // Darken the dominant color slightly for scannability
+          const finderColor = useColor ? {
+            r: Math.round(dom.r * 0.8),
+            g: Math.round(dom.g * 0.8),
+            b: Math.round(dom.b * 0.8)
+          } : fallbackDark;
+          color = `rgb(${finderColor.r},${finderColor.g},${finderColor.b})`;
+        } else {
+          r = maxR * Math.max(darkMin, Math.min(1.05, darkMin + (darkMax - darkMin) * darkness));
+          if (useColor && p.a > 100) {
+            const bc = boostColor(p.r, p.g, p.b, 0.3);
+            if (L > 0.78) {
+              const mix = (L - 0.78) / 0.22;
+              color = `rgb(${Math.round(bc.r*(1-mix*.75)+fallbackDark.r*mix*.75)},${Math.round(bc.g*(1-mix*.75)+fallbackDark.g*mix*.75)},${Math.round(bc.b*(1-mix*.75)+fallbackDark.b*mix*.75)})`;
+            } else { color = `rgb(${bc.r},${bc.g},${bc.b})`; }
+          } else { color = `rgb(${fallbackDark.r},${fallbackDark.g},${fallbackDark.b})`; }
+        }
+        dot(ctx, cx, cy, r, shape, color);
+
+      } else if (!critical && ghostStr > 0 && darkness > ghostThresh) {
+        const nd = (darkness - ghostThresh) / (1 - ghostThresh);
+        // Ghost ceiling: fixed at 35% of cell — bold and visible.
+        // High ECC (30% redundancy) handles any misreads.
+        const ghostCeil = maxR * 0.35;
+        const r = Math.min(maxR * 0.04 + (ghostCeil * ghostStr - maxR * 0.04) * Math.pow(nd, 0.55), ghostCeil);
+        let color;
+        if (useColor && p.a > 100) { const bc = boostColor(p.r, p.g, p.b, 0.3); color = `rgb(${bc.r},${bc.g},${bc.b})`; }
+        else { color = `rgb(${fallbackDark.r},${fallbackDark.g},${fallbackDark.b})`; }
+        dot(ctx, cx, cy, r, shape, color);
+      }
+    }
+  }
+}
+
+function dot(ctx, cx, cy, r, shape, color) {
+  ctx.fillStyle = color;
+  if (shape === 'circle') { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); }
+  else if (shape === 'rrect') { const rr=r*.35;ctx.beginPath();ctx.moveTo(cx-r+rr,cy-r);ctx.lineTo(cx+r-rr,cy-r);ctx.quadraticCurveTo(cx+r,cy-r,cx+r,cy-r+rr);ctx.lineTo(cx+r,cy+r-rr);ctx.quadraticCurveTo(cx+r,cy+r,cx+r-rr,cy+r);ctx.lineTo(cx-r+rr,cy+r);ctx.quadraticCurveTo(cx-r,cy+r,cx-r,cy+r-rr);ctx.lineTo(cx-r,cy-r+rr);ctx.quadraticCurveTo(cx-r,cy-r,cx-r+rr,cy-r);ctx.closePath();ctx.fill(); }
+  else { ctx.fillRect(cx - r, cy - r, r * 2, r * 2); }
+}
+
+// ════════════════════════════════════════
+// LIVE UPDATES
+// ════════════════════════════════════════
+['sDmn','sDmx','sG','sGt'].forEach(id => {
+  const vId = {sDmn:'vDmn',sDmx:'vDmx',sG:'vG',sGt:'vGt'}[id];
+  document.getElementById(id).oninput = () => { document.getElementById(vId).textContent = document.getElementById(id).value+'%'; renderSelected(); };
+});
+['shp','osz','bgc','fdc','col'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('change', renderSelected);
+  el.addEventListener('input', renderSelected);
+});
+document.getElementById('ecc').onchange = () => { if (S.versions.length) generate(); };
+document.getElementById('url').onkeydown = e => { if (e.key === 'Enter') generate(); };
+
+// ════════════════════════════════════════
+// DOWNLOADS
+// ════════════════════════════════════════
+async function dlPNG() {
+  const c = document.getElementById('mainCanvas');
+  const v = S.versions[S.selectedIdx];
+  const name = `chromacode-${S.label}-v${v?.ver||'x'}.png`;
+  
+  // Try native share (mobile)
+  try {
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    const file = new File([blob], name, { type: 'image/png' });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: name });
+      return;
+    }
+  } catch {}
+  
+  // Fallback: open in new tab (long-press to save on mobile)
+  const dataUrl = c.toDataURL('image/png');
+  const w = window.open('');
+  if (w) { w.document.write(`<img src="${dataUrl}" style="max-width:100%">`); w.document.title = name; }
+  else { // last resort: download link
+    const a = document.createElement('a'); a.download = name; a.href = dataUrl;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+}
+
+async function dlSVG() {
+  const v = S.versions[S.selectedIdx]; if (!v) return;
+  const svgStr = buildSVG(v);
+  const name = `chromacode-${S.label}-v${v.ver}.svg`;
+  const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+
+  // Try native share
+  try {
+    const file = new File([blob], name, { type: 'image/svg+xml' });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: name });
+      return;
+    }
+  } catch {}
+
+  // Fallback: open in new tab
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url);
+  if (!w) {
+    const a = document.createElement('a'); a.download = name; a.href = url;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+}
+
+function buildSVG(v) {
+  const { qr, sz, grid } = v;
+  const darkMin=+document.getElementById('sDmn').value/100, darkMax=+document.getElementById('sDmx').value/100;
+  const ghostStr=+document.getElementById('sG').value/100, ghostThresh=+document.getElementById('sGt').value/100;
+  const shape=document.getElementById('shp').value, bgColor=document.getElementById('bgc').value;
+  const fd=hexRgb(document.getElementById('fdc').value), useColor=document.getElementById('col').checked;
+  const quiet=2,total=sz+quiet*2,cell=12,svgSz=total*cell,maxR=cell/2;
+  const parts=[`<svg xmlns="http://www.w3.org/2000/svg" width="${svgSz}" height="${svgSz}" viewBox="0 0 ${svgSz} ${svgSz}">`,`<rect width="${svgSz}" height="${svgSz}" fill="${bgColor}"/>`];
+  for(let row=0;row<sz;row++){for(let col=0;col<sz;col++){
+    const isDark=qr.isDark(row,col),cx=(col+quiet+.5)*cell,cy=(row+quiet+.5)*cell;
+    const critical=isCritical(row,col,sz),p=px(grid,col,row),L=lum(p.r,p.g,p.b),darkness=1-L;
+    if(isDark){let r,color;if(critical){r=maxR*.92;const dom=S.colors[0]||fd;const fc=useColor?{r:Math.round(dom.r*.8),g:Math.round(dom.g*.8),b:Math.round(dom.b*.8)}:fd;color=`rgb(${fc.r},${fc.g},${fc.b})`}else{r=maxR*Math.max(darkMin,Math.min(1.05,darkMin+(darkMax-darkMin)*darkness));if(useColor&&p.a>100){if(L>.78){const m=(L-.78)/.22;color=`rgb(${Math.round(p.r*(1-m*.75)+fd.r*m*.75)},${Math.round(p.g*(1-m*.75)+fd.g*m*.75)},${Math.round(p.b*(1-m*.75)+fd.b*m*.75)})`}else{color=`rgb(${p.r},${p.g},${p.b})`}}else{color=`rgb(${fd.r},${fd.g},${fd.b})`}}
+    if(shape==='circle')parts.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"/>`);else if(shape==='rrect')parts.push(`<rect x="${cx-r}" y="${cy-r}" width="${r*2}" height="${r*2}" rx="${r*.35}" fill="${color}"/>`);else parts.push(`<rect x="${cx-r}" y="${cy-r}" width="${r*2}" height="${r*2}" fill="${color}"/>`)
+    }else if(!critical&&ghostStr>0&&darkness>ghostThresh){const nd=(darkness-ghostThresh)/(1-ghostThresh);const gc=maxR*0.35;const r=Math.min(maxR*.04+(gc*ghostStr-maxR*.04)*Math.pow(nd,.55),gc);const bc=useColor&&p.a>100?boostColor(p.r,p.g,p.b,0.3):{r:fd.r,g:fd.g,b:fd.b};const color=`rgb(${bc.r},${bc.g},${bc.b})`;
+    if(shape==='circle')parts.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"/>`);else parts.push(`<rect x="${cx-r}" y="${cy-r}" width="${r*2}" height="${r*2}" rx="${r*.2}" fill="${color}"/>`)
+    }}}
+  parts.push('</svg>');
+  return parts.join('\n');
+}
+</script>
+</body>
+</html>
