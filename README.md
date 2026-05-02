@@ -2,6 +2,9 @@
 
 Brand-aware mosaic QR code generator that blends images into scannable QR codes — no ugly center cutout.
 
+<img width="739" height="1600" alt="image" src="https://github.com/user-attachments/assets/7b368a3e-cc24-44b4-b58c-12f005947a52" />
+
+
 **[Live Demo →](https://itlinden.lv/qr)**
 
 Built by [IT Linden](https://itlinden.lv) · Author: Toms Nimanis
